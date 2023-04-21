@@ -59,23 +59,32 @@
   d <- d %>% mutate(parity = case_when(frever == 0 ~ 0,
                                        frever == 1 ~ 1,
                                        frever == 2 ~ 2,
-                                       frever >= 3 ~ 3),
-                    cpsid = as.numeric(cpsid)) 
-    
+                                       frever >= 3 ~ 3)) 
+  
   # Select the variables
-  ## Use a different weight: PWSSWGT
   d <- d %>% select(cpsid, parity, frever, year, sex, age, race, wtfinl) 
   
+### Load the background information --------------------------------
+    
+
   # Load the normal data
-  d2 <- haven::read_dta("Raw_data/cps_19902019.dta")
-  d2 <- d2 %>% select(cpsid, year, serial,  sex, age,  educ, asecwt)
+  d2 <- fread("Raw_data/cps_19902019.csv")
+  
+  # Select the variables
+  d2 <- d2[ ,.(cpsid, year, serial,  sex, age,  educ, asecwt)]
+  
+  # Change the age variable
+  d2$age <- as.numeric(d2$age)
+  
+  
+### Combine the fertility supplement with the basic data -----------------
+  
   
   # Merge the files
   d3 <- left_join(d, d2, by = c("year", "cpsid", "age"), suffix = c("", "_fertility"))
   
   # Filter the variables
   d3 <- d3 %>% filter(age >= 15 & age <= 49 & sex == 2) 
-  
   
   # Recode age, weight, sex and educatin variable
   d3 <- d3 %>% mutate(education = case_when(educ < 72 ~ "No high school degree",
