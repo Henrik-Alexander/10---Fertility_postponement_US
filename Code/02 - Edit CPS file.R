@@ -87,22 +87,22 @@
   d3 <- d3 %>% filter(age >= 15 & age <= 49 & sex == 2) 
   
   # Recode age, weight, sex and educatin variable
-  d3 <- d3 %>% mutate(education = case_when(educ < 72 ~ "No high school degree",
-                     educ == 72 ~ "High school diploma",
-                     educ > 72 & educ <= 110 ~ "Some college",
-                     educ > 110 & educ < 999 ~ "College graduate",
-                     educ >= 999 | is.na(educ) ~ NA_character_),
-                     weight = asecwt,
-                     sex = sex,
-                     age_group = cut(age, breaks = seq(15, 49, by = 5)))
-  
-
+  d3 <- d3 %>% rename(weight = asecwt)
   
   # Create a tibble
   d3 <- as_tibble(d3)
   
+  # Save the data
+  save(d3, file = "Data/cps_complete.Rda")
   
-
+  
+### Clean the data ------------------------------------------------------
+  
+  # Make education variable
+  
+  # Create age-groups
+  age_group = cut(age, breaks = seq(15, 49, by = 5))
+  
 ### Plot the population structure ---------------------------------------
 
   # Calculate the population share
@@ -111,8 +111,8 @@
   
   
   # Complete cases
-  # Distribution <- distribution %>% 
-  # complete(age_group, education, race, year, parity, fill = list(Proportion = 0))
+   Distribution <- distribution %>% 
+   complete(age_group, education, race, year, parity, fill = list(Proportion = 0))
 
   # Plot the population structure
   ggplot(distribution, aes(x = age_group, y = Proportion, group = education, fill = education)) +
