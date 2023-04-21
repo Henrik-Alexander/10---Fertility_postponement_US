@@ -5,7 +5,7 @@
 #################################################################################
 
 
-### Edit birth register files: Consistent names etc. ##########################
+### Edit birth register files: Consistent names etc. -------------------
 
   ## Last edited: 12.08.2022
   ## Last edited by: Henrik-Alexander Schubert
@@ -20,7 +20,7 @@
 
 
 
-### Packages & settings #######################################################
+### Packages & settings ----------------------------------------------
 
   # Identifying missing packages
   rm(list = ls())
@@ -30,9 +30,9 @@
   source("Functions/Functions.R")
   source("Functions/Graphics.R")
 
-### Loading the data ####################################################
+### Loading the data ----------------------------------------------
 
-  # location of the old time series
+  # Location of the old time series
   wd <- "U:/male fertility/1 Hooray for the J/Code Review/Raw_data/Births/" 
     
   # Years to cover
@@ -54,12 +54,12 @@
   
   # Group of years 3: 2003-2004
   years_3    <- 2003:2004
-  oldnames_3 <- c("mager","lbo_rec","meduc", "mrace6e","recwt") # ostate
+  oldnames_3 <- c("mager","lbo_rec","dmeduc", "mrace6e","recwt") # ostate
   newnames_3 <- newnames_2
   keep_3     <- c(newnames_3,"year")
   
-  # Group of years 4: 2005-2020
-  years_4   <- 2005:2020
+  # Group of years 4: 2005-2021
+  years_4   <- 2005:2021
   oldnames_4 <- c("mager", "lbo_rec", "meduc", "mrace")
   newnames_4 <- c("age_of_mother", "birth_order",
                   "education", "race")
@@ -72,7 +72,7 @@
   
   
   
-### First group of years ######################################################
+### First group of years ----------------------------------------------
   
   for(year in years_1) {
   
@@ -116,7 +116,7 @@
 
   
     
-### Second group of years #####################################################
+### Second group of years ----------------------------------------------
   
   for(year in years_2) {
     
@@ -148,7 +148,7 @@
   }  
   
   
-### Third group of years #####################################################
+### Third group of years ----------------------------------------------
   
   for(year in years_3) {
     
@@ -182,7 +182,7 @@
   }    
   
   
-### third group of years #####################################################
+### third group of years ----------------------------------------------
   
   for(year in years_4) {
     
@@ -220,6 +220,33 @@
     
   }  
   
- 
+### Combine cross-sections -----------------------------------
   
+  load("Data/US_fertility_2020.Rda")
+  
+  # Basic data set
+  d <- dat
+  
+  # Load and combine the data
+  for(year in 1969:2019){
+    load(paste0("Data/US_fertility_", year, ".Rda"))
+    d <- bind_rows(d, dat)
+  }
+  
+  # Save the complete data
+  save(d, file = "Data/births_complete.Rda")
+  
+### Multiple-Imputation  -----------------------------------
+
+  # Scenario 1: Missing at random
+  
+  # Scenario 2: Basic-education missing
+  
+  # Scenario 3: High-education missing
+  
+  # Scenario 4: Medium-education missing
+  
+  
+  
+    
 ###############        END         ###########################  

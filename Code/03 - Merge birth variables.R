@@ -20,19 +20,9 @@
   source("Functions/Functions.R")
   source("Functions/Graphics.R")
   
-  
-  # Basic data set
-  load("Data/US_fertility_1969.Rda")
-  d <- dat
+  # Load the data
+  load("Data/births_complete.Rda")
 
-### Combine Birth variables ----------------------------------------
-
-  
-  # Load and combine the data
-  for(year in 1970:2020){
-  load(paste0("Data/US_fertility_", year, ".Rda"))
-  d <- bind_rows(d, dat)
-  }
   
   
   # Plot the development of fertility across educational groups
