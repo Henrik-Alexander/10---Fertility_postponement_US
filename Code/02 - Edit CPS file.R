@@ -167,7 +167,9 @@
     ggplot(aes(age_group, parity, fill = share)) + 
     geom_tile() +
     theme(legend.key.width = unit(3, "cm")) +
-    scale_fill_viridis_c()
+    scale_fill_viridis_c() +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0))
   
   
 ### Estimate the exposures -----------------------------------------
