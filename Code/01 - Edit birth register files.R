@@ -76,7 +76,7 @@
   
 ### First group of years ----------------------------------------------
   
- # for(year in years_1) {
+  for(year in years_1) {
   
     # Load data
     file <-  paste0(wd, "natl", year, ".csv")
