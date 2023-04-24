@@ -5,7 +5,7 @@
 #################################################################################
 
 
-### Edit birth register files: Consistent names etc. -------------------
+### Edit birth register files: Consistent names etc. ------------
 
   ## Last edited: 12.08.2022
   ## Last edited by: Henrik-Alexander Schubert
@@ -20,7 +20,7 @@
 
 
 
-### Packages & settings ----------------------------------------------
+### Packages & settings -------------------------------------------
 
   # Identifying missing packages
   rm(list = ls())
@@ -52,19 +52,21 @@
                   "education", "race", "count")
   keep_2     <- c(newnames_2,"year")
   
-  # Group of years 3: 2003-2004
-  years_3    <- 2003:2004
-  oldnames_3 <- c("mager","lbo_rec","dmeduc", "mrace6e","recwt") # ostate
-  newnames_3 <- newnames_2
-  keep_3     <- c(newnames_3,"year")
   
-  # Group of years 4: 2005-2021
-  years_4   <- 2005:2021
-  oldnames_4 <- c("mager", "lbo_rec", "meduc", "mrace")
+  # Group of years 4: 2003-2014
+  years_4   <- 2003:2014
+  oldnames_4 <- c("mager14", "lbo_rec", "meduc", "mrace")
   newnames_4 <- c("age_of_mother", "birth_order",
                   "education", "race")
   keep_4       <- c(newnames_4, "year")
   
+  
+  # Group of years 4: 2015-2021
+  years_4   <- 2015:2021
+  oldnames_4 <- c("mager14", "lbo_rec", "meduc", "mrace")
+  newnames_4 <- c("age_of_mother", "birth_order",
+                  "education", "race")
+  keep_4       <- c(newnames_4, "year")
  
   
   # Aggregation formula
@@ -74,7 +76,7 @@
   
 ### First group of years ----------------------------------------------
   
-  for(year in years_1) {
+ # for(year in years_1) {
   
     # Load data
     file <-  paste0(wd, "natl", year, ".csv")
@@ -82,11 +84,6 @@
     
     # Generate variables
     dat$year  <- year
-    
-    # Handle DC
-     tochange <- dat$statenat==9 & dat$stateres!=9
-     tochange[is.na(tochange)] <- FALSE
-     dat$statenat[tochange]  <- dat$stateres[tochange]
 
     # Rename variables
     setnames(dat,
@@ -104,6 +101,11 @@
                   subset=restatus != 4,
                   select=keep_1)
     
+    
+    # Change the age coding
+    dat$age <- coll_age(dat$age_of_mother)
+    
+    
     # data
     dat <- collapse_vars(dat, year)
     
@@ -112,8 +114,6 @@
     save(dat, file= paste0("Data/", file))
   
   }
-  
-
   
     
 ### Second group of years ----------------------------------------------
@@ -184,11 +184,11 @@
   
 ### third group of years ----------------------------------------------
   
+  
   for(year in years_4) {
     
     # Load data
-    file <- paste0(wd, "natl",year,".csv")
-    dat  <- fread(file=file)
+    dat  <- fread(file=paste0("Raw/natl", year,".csv"))
     
     # Generate variables
     dat$year  <- year
@@ -204,6 +204,8 @@
     setnames(dat,
              old=oldnames_4,
              new=newnames_4)
+    
+
     
     # Subset
     dat <- subset(dat,
@@ -222,7 +224,6 @@
   
 ### Combine cross-sections -----------------------------------
   
-  load("Data/US_fertility_2020.Rda")
   
   # Basic data set
   d <- dat
@@ -232,6 +233,10 @@
     load(paste0("Data/US_fertility_", year, ".Rda"))
     d <- bind_rows(d, dat)
   }
+  
+  
+  # Harmonize the education coding
+  d$Education <- ifelse(d$Education == "High-school diploma", "High school diploma", d$Education)
   
   # Save the complete data
   save(d, file = "Data/births_complete.Rda")
