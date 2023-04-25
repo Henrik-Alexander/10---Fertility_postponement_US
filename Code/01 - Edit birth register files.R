@@ -7,7 +7,7 @@
 
 ### Edit birth register files: Consistent names etc. ------------
 
-  ## Last edited: 12.08.2022
+  ## Last edited: 25.04.2022
   ## Last edited by: Henrik-Alexander Schubert
 
   ## Data available from:
@@ -19,6 +19,29 @@
   ## code
 
 
+
+### Loading the natality files ###############################################
+
+# Increase the timeout time
+#options(timeout = max(300, getOption("timeout")))
+
+#for(i in 1989:2021){
+  
+  # Temporary file direction
+#  temp <- tempfile()
+  
+  # Create the web-page
+#  webpage <- paste0("https://data.nber.org/natality/", i, "/natl", i, ".csv.zip")
+  
+  # Download the file
+#  download.file(webpage, temp, quite = T)
+  
+  # Load the data
+#  unzip(temp, exdir = "Raw/Births")
+  
+#  cat("Data for ", i, "is saved in /Raw. \n")
+  
+#} 
 
 ### Packages & settings -------------------------------------------
 
@@ -36,44 +59,34 @@
   wd <- "U:/male fertility/1 Hooray for the J/Code Review/Raw_data/Births/" 
     
   # Years to cover
-  years <- 1969:2004
+  years <- 1985:2004
 
-  # Group of years 1: 1969-1977
-  years_1    <- 1969:1977
-  oldnames_1 <- c("dmage","dlivord", "dmeduc", "mrace" ) # statenat
+  
+  # Group of years 1: 1989-2002
+  years_1   <- 1989:2002
+  oldnames_1 <- c("dmage", "dlivord", "dmeduc",  "orracem", "recwt") # statenat
   newnames_1 <- c("age_of_mother", "birth_order",
-                "education", "race")
-  keep_1     <- c(newnames_1,"year","count")
-  
-  # Group of years 2: 1978-2002
-  years_2    <- 1978:2002
-  oldnames_2 <- c("dmage","dlivord", "dmeduc",  "mrace" , "recwt") # statenat
-  newnames_2 <- c("age_of_mother", "birth_order",
                   "education", "race", "count")
-  keep_2     <- c(newnames_2,"year")
+  keep_1     <- c(newnames_1,"Year")
   
   
-  # Group of years 4: 2003-2014
-  years_4   <- 2003:2014
-  oldnames_4 <- c("mager14", "lbo_rec", "meduc", "mrace")
-  newnames_4 <- c("age_of_mother", "birth_order",
+  # Group of years 2: 2003-2013
+  years_2   <- 2003:2013
+  oldnames_2 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
+  newnames_2 <- c("age_of_mother", "birth_order",
                   "education", "race")
-  keep_4       <- c(newnames_4, "year")
+  keep_2       <- c(newnames_2, "Year")
   
   
-  # Group of years 4: 2015-2021
-  years_4   <- 2015:2021
-  oldnames_4 <- c("mager14", "lbo_rec", "meduc", "mrace")
-  newnames_4 <- c("age_of_mother", "birth_order",
-                  "education", "race")
-  keep_4       <- c(newnames_4, "year")
+  # Group of years 3: 2014-2018
+  years_3   <- 2014:2018
+  oldnames_3 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
  
   
-  # Aggregation formula
-  agg_formula <- as.formula("count~age_of_mother+birth_order+education+race+year")
-  
-  
-  
+  # Group of years 3: 2014-2018
+  years_4   <- 2014:2018
+  oldnames_4 <- c("mager", "lbo_rec", "meduc", "mracehisp")
+
 ### First group of years ----------------------------------------------
   
   for(year in years_1) {
@@ -83,31 +96,20 @@
     dat  <- fread(file=file)
     
     # Generate variables
-    dat$year  <- year
+    dat$Year  <- year
 
     # Rename variables
     setnames(dat,
              old=oldnames_1,
              new=newnames_1)
     
-    # Weight variable
-    if(year < 1972) {
-      dat$count <- 2} else {
-      setnames(dat,old="recwt",new="count")
-      }
-    
     # Subset
     dat <- subset(dat,
                   subset=restatus != 4,
                   select=keep_1)
     
-    
-    # Change the age coding
-    dat$age <- coll_age(dat$age_of_mother)
-    
-    
-    # data
-    dat <- collapse_vars(dat, year)
+    # Data
+    dat <- collapse_vars_1(dat)
     
     # Save
     file <- paste0("US_fertility_",year,".Rda")
@@ -125,7 +127,7 @@
     dat  <- fread(file=file)
     
     # Generate variables
-    dat$year  <- year
+    dat$Year  <- year
 
 
     # Rename variables
@@ -138,8 +140,8 @@
                   subset=restatus != 4,
                   select=keep_2)
     
-    # data
-    dat <- collapse_vars(dat, year)
+    # Data
+    dat <- collapse_vars_2(dat)
     
     # Save
     file <- paste0("US_fertility_",year,".Rda")
@@ -156,23 +158,24 @@
     file <- paste0(wd, "natl",year,".csv")
     dat  <- fread(file= file)
     
-    # Generate variables
-    dat$year  <- year
-    if(year==2003) dat$mager <- dat$mager41+13
+    # Make lower letters
+    if(year >= 2019) names(dat) <- tolower(names(dat))
     
+    # Generate variables
+    dat$Year  <- year
     
     # Rename variables
     setnames(dat,
              old=oldnames_3,
-             new=newnames_3)
+             new=newnames_2)
     
     # Subset
     dat <- subset(dat,
                   subset=restatus != 4,
-                  select=keep_3)
+                  select=keep_2)
     
     # data
-    dat <- collapse_vars(dat, year)
+    dat <- collapse_vars_3(dat)
     
     
     # Save
@@ -181,47 +184,39 @@
     
   }    
   
-  
-### third group of years ----------------------------------------------
-  
+  ### Third group of years ----------------------------------------------
   
   for(year in years_4) {
     
     # Load data
-    dat  <- fread(file=paste0("Raw/natl", year,".csv"))
+    file <- paste0(wd, "natl",year,".csv")
+    dat  <- fread(file= file)
+    
+    # Make lower letters
+    names(dat) <- tolower(names(dat))
     
     # Generate variables
-    dat$year  <- year
-    
-    # adjust variable label for race
-    if(year >= 2014) oldnames_4[4] <- "mrace6"
-    if(year >= 2019){
-      oldnames_4 <- str_to_upper(oldnames_4)
-      dat <- rename(dat, restatus = RESTATUS )
-    }
+    dat$Year  <- year
     
     # Rename variables
     setnames(dat,
-             old=oldnames_4,
-             new=newnames_4)
-    
-
+             old=oldnames_3,
+             new=newnames_2)
     
     # Subset
     dat <- subset(dat,
                   subset=restatus != 4,
-                  select=keep_4) %>% as.data.frame()
+                  select=keep_2)
     
     # data
-    dat <- collapse_vars(dat, year)
+    dat <- collapse_vars_4(dat)
     
     
     # Save
     file <- paste0("US_fertility_",year,".Rda")
     save(dat, file= paste0("Data/", file))
     
-  }  
-  
+  }    
 ### Combine cross-sections -----------------------------------
   
   
