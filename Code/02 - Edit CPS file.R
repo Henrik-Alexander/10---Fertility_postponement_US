@@ -6,7 +6,7 @@
 
 
   # Edited by: Henrik-Alexander Schubert
-  # Edited on: 21.04.2022
+  # Edited on: 25.04.2022
 
 
 ### Preparations ------------------------------------------------
@@ -84,7 +84,7 @@
 ### Combine the fertility supplement with the basic data -----------------
   
   # Merge the files
-  d3 <- inner_join(as_tibble(d), d2, by = c("year", "cpsid"), suffix = c("", "_fertility"))
+  d3 <- inner_join(as.data.frame(d), d2, by = c("year", "cpsid"), suffix = c("", "_fertility"))
   
   # Filter the variables
   d3 <- d3 %>% filter(age %in% ages & sex == 2) 
@@ -118,10 +118,29 @@
   # Make educatin a factor variable
   d$education <- factor(d$education, levels = c("No high school degree", "High school diploma", "Some college", "College degree"))
   
-### Clean the educational data -------------------------------------------
+### Clean the age data --------------------------------------------------
   
   # Create age-groups
   d$age_group <- cut(d$age, breaks = seq(15, 50, by = 5), include.lowest = T, right = F)
+  
+### Harmonize the race data ---------------------------------------------
+  
+  # Ethnicity of mixed origin
+  d$Ethnicity <- "Others"
+  
+  # Non-Hispanic White
+  d[d$hispanic == "Non-Hispanic" & d$race == "white" & !is.na(d$hispanic) & !is.na(d$race), ]$Ethnicity <- "Non-hispanic white"
+  
+  # Non-Hispanic Black
+  d[d$hispanic == "Non-Hispanic" & d$race == "black" & !is.na(d$hispanic) & !is.na(d$race), ]$Ethnicity <- "Non-hispanic black"
+  
+  # Hispanics
+  d[d$hispanic == "Hispanic" & !is.na(d$hispanic), ]$Ethnicity <- "Hispanic"
+  
+  # Missing
+  d[is.na(d$hispanic) | is.na(d$race), ] <- NA
+  
+
   
 ### Plot the population structure ---------------------------------------
 
@@ -155,28 +174,38 @@
     scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6),
                        expand = c(0, 0))
   
+  
+  # Ethnicity
+  ggplot(d, aes(year,  fill = Ethnicity)) +
+    geom_histogram(aes(weight = wtfinl)) +
+    ylab(NULL) + 
+    scale_fill_viridis_d() +
+    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6),
+                       expand = c(0, 0))
+  
   # Parity distribution
   ggplot(d, aes(year,  fill = as.factor(parity))) +
     geom_histogram(aes(weight = wtfinl)) +
     ylab(NULL) + 
-    scale_fill_viridis_d() +
-    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6), expand = c(0, 0))
+    scale_fill_viridis_d(name = "Parity:") +
+    scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6), expand = c(0, 0)) +
+    ggtitle("Parity distribution over time in the CPS")
 
   # Conditional distribution of age and parity
   d %>% group_by(age_group, parity) %>% summarise(share = sum(wtfinl)) %>% 
     ggplot(aes(age_group, parity, fill = share)) + 
     geom_tile() +
     theme(legend.key.width = unit(3, "cm")) +
-    scale_fill_viridis_c() +
-    scale_x_continuous(expand = c(0, 0)) +
-    scale_y_continuous(expand = c(0, 0))
+    scale_fill_viridis_c(labels = unit_format(unit = "M", scale = 1e-6)) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0)) +
+    ggtitle("Age and parity distribution in the CPS")
   
   
 ### Estimate the exposures -----------------------------------------
   
-  
   # Estimate population count
-  exposure <- d %>% group_by(age_group, parity, year, hispanic, race) %>% 
+  exposure <- d %>% group_by(age_group, parity, year, hispanic, Ethnicity) %>% 
     summarise(Pop = sum(wtfinl))
   
   
