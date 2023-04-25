@@ -134,7 +134,7 @@
   
   
   # Plot the change in the educational structure
-  ggplot(d, aes(year,  fill = education)) +
+  ggplot(subset(d, !is.na(education)), aes(year,  fill = education)) +
     geom_histogram(aes(weight = wtfinl)) +
     ylab(NULL) + 
     scale_fill_viridis_d() +
