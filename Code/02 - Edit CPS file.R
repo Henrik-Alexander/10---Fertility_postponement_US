@@ -206,7 +206,10 @@
   
   # Estimate population count
   exposure <- d %>% group_by(age_group, parity, year, hispanic, Ethnicity) %>% 
-    summarise(Pop = sum(wtfinl))
+    summarise(Pop = sum(wtfinl), .groups = "drop")
+  
+  # Summary
+  summary(exposure)
   
   
   # Save the exposure data
