@@ -15,9 +15,7 @@
 
   ## Notes:
   ## Depending on the year the data files look differently
-  ## Because of this they are edited in several chunks of
-  ## code
-
+  ## Because of this they are edited in several chunks of code
 
 
 ### Loading the natality files ###############################################
@@ -59,7 +57,7 @@
   wd <- "U:/male fertility/1 Hooray for the J/Code Review/Raw_data/Births/" 
     
   # Years to cover
-  years <- 1985:2004
+  years <- 1989:2004
 
   
   # Group of years 1: 1989-2002
@@ -83,9 +81,9 @@
   oldnames_3 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
  
   
-  # Group of years 3: 2014-2018
-  years_4   <- 2014:2018
-  oldnames_4 <- c("mager", "lbo_rec", "meduc", "mracehisp")
+  # Group of years 3: 2019-2021
+  years_4   <- 2019:2021
+  oldnames_4 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
 
 ### First group of years ----------------------------------------------
   
@@ -158,8 +156,6 @@
     file <- paste0(wd, "natl",year,".csv")
     dat  <- fread(file= file)
     
-    # Make lower letters
-    if(year >= 2019) names(dat) <- tolower(names(dat))
     
     # Generate variables
     dat$Year  <- year
@@ -184,7 +180,7 @@
     
   }    
   
-  ### Third group of years ----------------------------------------------
+  ### Fourth group of years ----------------------------------------------
   
   for(year in years_4) {
     
@@ -200,7 +196,7 @@
     
     # Rename variables
     setnames(dat,
-             old=oldnames_3,
+             old=oldnames_4,
              new=newnames_2)
     
     # Subset
@@ -217,6 +213,7 @@
     save(dat, file= paste0("Data/", file))
     
   }    
+  
 ### Combine cross-sections -----------------------------------
   
   
@@ -224,17 +221,20 @@
   d <- dat
   
   # Load and combine the data
-  for(year in 1969:2019){
+  for(year in 1989:2020){
     load(paste0("Data/US_fertility_", year, ".Rda"))
     d <- bind_rows(d, dat)
   }
   
-  
-  # Harmonize the education coding
-  d$Education <- ifelse(d$Education == "High-school diploma", "High school diploma", d$Education)
-  
   # Save the complete data
   save(d, file = "Data/births_complete.Rda")
+  
+### Births graphs ------------------------------------------
+  
+  # 
+  ggplot(d, aes(Year, Births, fill = Education)) +
+    geom_col() +
+    facet_grid(Age ~ Ethnicity)
   
 ### Multiple-Imputation  -----------------------------------
 
@@ -247,6 +247,6 @@
   # Scenario 4: Medium-education missing
   
   
-  
+
     
 ###############        END         ###########################  
