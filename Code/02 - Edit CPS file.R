@@ -55,7 +55,7 @@
                 ifelse(d$race == 650, "asian", 
          "others"))) 
   
-
+  
   # Create the parity information
   d <- d %>% mutate(parity = case_when(frever == 0 ~ 0,
                                        frever == 1 ~ 1,
@@ -126,22 +126,26 @@
 ### Harmonize the race data ---------------------------------------------
   
   # Ethnicity of mixed origin
-  d$Ethnicity <- "Others"
+  d$ethnicity <- "Others"
   
   # Non-Hispanic White
-  d[d$hispanic == "Non-Hispanic" & d$race == "white" & !is.na(d$hispanic) & !is.na(d$race), ]$Ethnicity <- "Non-hispanic white"
+  d[d$hispanic == "Non-Hispanic" & d$race == "white" & !is.na(d$hispanic) & !is.na(d$race), ]$ethnicity <- "Non-hispanic white"
   
   # Non-Hispanic Black
-  d[d$hispanic == "Non-Hispanic" & d$race == "black" & !is.na(d$hispanic) & !is.na(d$race), ]$Ethnicity <- "Non-hispanic black"
+  d[d$hispanic == "Non-Hispanic" & d$race == "black" & !is.na(d$hispanic) & !is.na(d$race), ]$ethnicity <- "Non-hispanic black"
   
   # Hispanics
-  d[d$hispanic == "Hispanic" & !is.na(d$hispanic), ]$Ethnicity <- "Hispanic"
+  d[d$hispanic == "Hispanic" & !is.na(d$hispanic), ]$ethnicity <- "Hispanic"
   
   # Missing
   d[is.na(d$hispanic) | is.na(d$race), ] <- NA
   
-
+### Remove missings -----------------------------------------------------
   
+  
+  # Filter missing data
+  d <- d[!is.na(d$cpsid), ]
+
 ### Plot the population structure ---------------------------------------
 
   # Plot the change in the age structure
@@ -176,7 +180,7 @@
   
   
   # Ethnicity
-  ggplot(d, aes(year,  fill = Ethnicity)) +
+  ggplot(d, aes(year,  fill = ethnicity)) +
     geom_histogram(aes(weight = wtfinl)) +
     ylab(NULL) + 
     scale_fill_viridis_d() +
@@ -194,25 +198,99 @@
   # Conditional distribution of age and parity
   d %>% group_by(age_group, parity) %>% summarise(share = sum(wtfinl)) %>% 
     ggplot(aes(age_group, parity, fill = share)) + 
-    geom_tile() +
+    geom_tile() + ylab("Age") +
     theme(legend.key.width = unit(3, "cm")) +
     scale_fill_viridis_c(labels = unit_format(unit = "M", scale = 1e-6)) +
     scale_x_discrete(expand = c(0, 0)) +
     scale_y_discrete(expand = c(0, 0)) +
     ggtitle("Age and parity distribution in the CPS")
   
-  
 ### Estimate the exposures -----------------------------------------
   
-  # Estimate population count
-  exposure <- d %>% group_by(age_group, parity, year, hispanic, Ethnicity) %>% 
-    summarise(Pop = sum(wtfinl), .groups = "drop")
   
-  # Summary
-  summary(exposure)
+  # Estimate population count with non-missing data
+  exp_nm <- na.omit(d) %>% 
+    group_by(age_group, parity, year, hispanic, ethnicity, education) %>% 
+    summarise(Pop_nm = sum(wtfinl), .groups = "drop") %>% 
+    rename(age = age_group)
+  
+  # Create names
+  names(exp_nm) <- str_to_title(names(exp_nm))
+  
+  
+### Multiple imputation of education -------------------------------
+  
+  # Imputations
+  n_imp <- 100
+  
+  # Run multiple imputation
+  imp <- mice(d, maxit = 0)
+  
+  # Extract predictor matrix and methods of imputation
+  meth <- imp$method
+  predM <- imp$predictorMatrix
+  
+  # Variables not used for imputation, set 0
+  predM[, c("age_fertility")] <- 0
+  meth[meth == "pmm"] <- ""
+  
+  
+  # Impute education and create 5 datasets
+  imp2 <- mice(d, maxit = n_imp,
+               predictorMatrix = predM,
+               method = meth, print = T)
+  
+  # Extract the imputated values
+  imp_educ <- imp2$imp$education
+  
+  # Extract where missign-values are located
+  where <- imp2$where[, "education"]
+  
+### Impute the data ------------------
+  
+  # Create a container
+  exp_imp <- list()
+
+  # Estimate with multiple imputations
+  for(i in 1:n_imp){
+    
+    # Create a temporary data
+    tmp <- d
+    
+    # Insert the imputed values
+    tmp[where, "education"] <- imp_educ[, i]
+    
+    # Aggregate the results
+    tmp <- tmp %>% 
+      group_by(age_group, parity, year, hispanic, ethnicity, education) %>% 
+      summarise(Iter = i, Pop = sum(wtfinl), .groups = "drop") %>% 
+      rename(age = age_group)  
+    
+    # Create names
+    names(tmp) <- str_to_title(names(tmp))
+    
+    # Store the results
+    exp_imp[[i]] <- tmp
+  }
+  
+### Aggregate the data -----------------------------------
+  
+  # Combine 
+  exp_imp <- do.call(rbind, exp_imp)
+  
+  # Low, mean, high
+  exp_imp <- exp_imp %>% group_by(Age, Parity, Year, Hispanic, Ethnicity, Education) %>% 
+    summarise(min_exp = min(Pop),
+              mean_exp = mean(Pop),
+              max_exp = max(Pop), 
+              .groups = "drop")
+  
+  
+  # Join the different exposures
+  exposure <- inner_join(exp_imp, exp_nm)
   
   
   # Save the exposure data
-  save(exposure, file = "Data/exosure.Rda")
+  save(exposure, file = "Data/exposure.Rda")
   
 ##########        END           ###########

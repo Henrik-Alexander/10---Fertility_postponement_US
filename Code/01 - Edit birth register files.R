@@ -7,7 +7,7 @@
 
 ### Edit birth register files: Consistent names etc. ------------
 
-  ## Last edited: 25.04.2022
+  ## Last edited: 25.04.2023
   ## Last edited by: Henrik-Alexander Schubert
 
   ## Data available from:
@@ -20,26 +20,26 @@
 
 ### Loading the natality files ###############################################
 
-# Increase the timeout time
-#options(timeout = max(300, getOption("timeout")))
-
-#for(i in 1989:2021){
+  # Increase the timeout time
+  #options(timeout = max(300, getOption("timeout")))
   
-  # Temporary file direction
-#  temp <- tempfile()
-  
-  # Create the web-page
-#  webpage <- paste0("https://data.nber.org/natality/", i, "/natl", i, ".csv.zip")
-  
-  # Download the file
-#  download.file(webpage, temp, quite = T)
-  
-  # Load the data
-#  unzip(temp, exdir = "Raw/Births")
-  
-#  cat("Data for ", i, "is saved in /Raw. \n")
-  
-#} 
+  #for(i in 1989:2021){
+    
+    # Temporary file direction
+  #  temp <- tempfile()
+    
+    # Create the web-page
+  #  webpage <- paste0("https://data.nber.org/natality/", i, "/natl", i, ".csv.zip")
+    
+    # Download the file
+  #  download.file(webpage, temp, quite = T)
+    
+    # Load the data
+  #  unzip(temp, exdir = "Raw/Births")
+    
+  #  cat("Data for ", i, "is saved in /Raw. \n")
+    
+  #} 
 
 ### Packages & settings -------------------------------------------
 
@@ -68,185 +68,129 @@
   keep_1     <- c(newnames_1,"Year")
   
   
-  # Group of years 2: 2003-2013
-  years_2   <- 2003:2013
-  oldnames_2 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
+  # Group of years 2: 2003-2007
+  years_2   <- 2003:2006
+  oldnames_2 <- c("mager9", "lbo_rec", "dmeduc", "mracehisp")
   newnames_2 <- c("age_of_mother", "birth_order",
                   "education", "race")
   keep_2       <- c(newnames_2, "Year")
   
-  
-  # Group of years 3: 2014-2018
-  years_3   <- 2014:2018
+  # Group of years 3: 2003-2007
+  years_3   <- 2007:2013
   oldnames_3 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
+  
+  # Group of years 4: 2014-2018
+  years_4   <- 2014:2018
+  oldnames_4 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
  
   
-  # Group of years 3: 2019-2021
-  years_4   <- 2019:2021
-  oldnames_4 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
+  # Group of years 5: 2019-2021
+  years_5   <- 2019:2021
+  oldnames_5 <- c("mager9", "lbo_rec", "meduc", "mracehisp")
+  
+  
 
-### First group of years ----------------------------------------------
+### Clean the data -----------------------------------------------  
   
-  for(year in years_1) {
+# Create the container
+result <- list()
   
-    # Load data
-    file <-  paste0(wd, "natl", year, ".csv")
-    dat  <- fread(file=file)
+### First group of years 
+result[[1]] <- mclapply(years_1, FUN = clean_birth,
+                   collapse_vars_1, oldnames_1, newnames_1, keep_1)
+  
     
-    # Generate variables
-    dat$Year  <- year
+### Second group of years
+result[[2]] <- mclapply(years_2, FUN = clean_birth,
+                   collapse_vars_2, oldnames_2, newnames_2, keep_2)
 
-    # Rename variables
-    setnames(dat,
-             old=oldnames_1,
-             new=newnames_1)
-    
-    # Subset
-    dat <- subset(dat,
-                  subset=restatus != 4,
-                  select=keep_1)
-    
-    # Data
-    dat <- collapse_vars_1(dat)
-    
-    # Save
-    file <- paste0("US_fertility_",year,".Rda")
-    save(dat, file= paste0("Data/", file))
   
-  }
   
-    
-### Second group of years ----------------------------------------------
+### Third group of years
+result[[3]] <- mclapply(years_3, FUN = clean_birth,
+                   collapse_vars_3, oldnames_3, newnames_2, keep_2)  
   
-  for(year in years_2) {
-    
-    # Load data
-    file <- paste0(wd, "natl",year,".csv")
-    dat  <- fread(file=file)
-    
-    # Generate variables
-    dat$Year  <- year
+  
+### Fourth group of years
+result[[4]] <- mclapply(years_4, FUN = clean_birth,
+                   collapse_vars_4, oldnames_4, newnames_2, keep_2)  
+  
+### Fifth group of years 
+result[[5]] <- mclapply(years_5, FUN = clean_birth,
+                   collapse_vars_5, oldnames_5, newnames_2, keep_2) 
+  
 
 
-    # Rename variables
-    setnames(dat,
-             old=oldnames_2,
-             new=newnames_2)
+### Combine the results --------------------------------------
 
-    # Subset
-    dat <- subset(dat,
-                  subset=restatus != 4,
-                  select=keep_2)
-    
-    # Data
-    dat <- collapse_vars_2(dat)
-    
-    # Save
-    file <- paste0("US_fertility_",year,".Rda")
-    save(dat, file= paste0("Data/", file))
-    
-  }  
-  
-  
-### Third group of years ----------------------------------------------
-  
-  for(year in years_3) {
-    
-    # Load data
-    file <- paste0(wd, "natl",year,".csv")
-    dat  <- fread(file= file)
-    
-    
-    # Generate variables
-    dat$Year  <- year
-    
-    # Rename variables
-    setnames(dat,
-             old=oldnames_3,
-             new=newnames_2)
-    
-    # Subset
-    dat <- subset(dat,
-                  subset=restatus != 4,
-                  select=keep_2)
-    
-    # data
-    dat <- collapse_vars_3(dat)
-    
-    
-    # Save
-    file <- paste0("US_fertility_",year,".Rda")
-    save(dat, file= paste0("Data/", file))
-    
-  }    
-  
-  ### Fourth group of years ----------------------------------------------
-  
-  for(year in years_4) {
-    
-    # Load data
-    file <- paste0(wd, "natl",year,".csv")
-    dat  <- fread(file= file)
-    
-    # Make lower letters
-    names(dat) <- tolower(names(dat))
-    
-    # Generate variables
-    dat$Year  <- year
-    
-    # Rename variables
-    setnames(dat,
-             old=oldnames_4,
-             new=newnames_2)
-    
-    # Subset
-    dat <- subset(dat,
-                  subset=restatus != 4,
-                  select=keep_2)
-    
-    # data
-    dat <- collapse_vars_4(dat)
-    
-    
-    # Save
-    file <- paste0("US_fertility_",year,".Rda")
-    save(dat, file= paste0("Data/", file))
-    
-  }    
-  
-### Combine cross-sections -----------------------------------
-  
-  
-  # Basic data set
-  d <- dat
-  
-  # Load and combine the data
-  for(year in 1989:2020){
-    load(paste0("Data/US_fertility_", year, ".Rda"))
-    d <- bind_rows(d, dat)
-  }
-  
+# Combine the results 
+d <- rbind(do.call(rbind, result[[1]]),
+      do.call(rbind, result[[2]]),
+      do.call(rbind, result[[3]]),
+      do.call(rbind, result[[4]]),
+      do.call(rbind, result[[5]]))
+
+
+  # Make factor varibles
+  d <- mutate(d, across(c(Age, Parity, Education, Ethnicity), as.factor))
+
+
   # Save the complete data
   save(d, file = "Data/births_complete.Rda")
   
 ### Births graphs ------------------------------------------
   
-  # 
+  # Plot the distribution of births over time
   ggplot(d, aes(Year, Births, fill = Education)) +
     geom_col() +
-    facet_grid(Age ~ Ethnicity)
+    facet_grid(Age ~ Ethnicity) +
+    scale_x_continuous(n.breaks = 10) +
+    theme(axis.text.x = element_text(angle = 45, vjust = -0.001))
   
-### Multiple-Imputation  -----------------------------------
+  
+  
+### Multiple imputation of education, ethnicity and parity --------------------
+  
+  load("Data/births_complete.Rda")
+  
+  # Save the data
+  lapply(1989:2021, function(x){  write.csv(d[d$Year == x, ], file = paste0("Raw/Imputation/imp_", x, ".csv"))})
+  
+  # Create the names vector
+  all_samples <- as.data.frame(list.files("Raw/Imputation/"), include.dirs = T)
+  seq_id_all <- seq_along(1:nrow(all_samples))
 
-  # Scenario 1: Missing at random
+# --------
   
-  # Scenario 2: Basic-education missing
+  # Get the number of cores
+  no_cores <- detectCores(logical = T)
   
-  # Scenario 3: High-education missing
+  # Register number of Cluster
+  cl <- makeCluster(33)
   
-  # Scenario 4: Medium-education missing
+  # Export to clusters
+  clusterExport(cl, list('impute_births', 'all_samples'))
   
+# -------
   
-
+  # Run the imputation
+  births_imputed <- parLapply(cl, seq_id_all, fun = impute_births)
+  
+  # Combine the results
+  births_imputed <- do.call(rbind, births_imputed)
+  
+  # Save the exposure data
+  save(births_imputed, file = "Data/births_imputed.Rda")
+  
+  # Plot the development of fertility across educational groups
+  ggplot(d, aes(year, Births, fill = Education, group = Education)) +
+    geom_col() +
+    facet_grid(Age ~ Parity)
+  
+  # How many missings per year
+  d %>% mutate(miss_edu = factor(if_else(is.na(Education), 1, 0))) %>% 
+    group_by(year, miss_edu) %>% summarise(miss = sum(count)) %>%  
+  ggplot(aes(x = year, miss, color = miss_edu, group = miss_edu)) + 
+    geom_line()
     
 ###############        END         ###########################  
