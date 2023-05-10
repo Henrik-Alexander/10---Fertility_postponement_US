@@ -182,15 +182,18 @@ d <- rbind(do.call(rbind, result[[1]]),
   # Save the exposure data
   save(births_imputed, file = "Data/births_imputed.Rda")
   
+  # Aggregate
+  births_imputed <- births_imputed %>% group_by(Age, Parity,  Education, Ethnicity, Year) %>% 
+    count()
+  
+  # Save the data
+  save(births_imputed, file = "Data/births_complete.Rda")
+  
   # Plot the development of fertility across educational groups
-  ggplot(d, aes(year, Births, fill = Education, group = Education)) +
+  ggplot(births_imputed, aes(x = Year, y = n, fill = Education, group = Education)) +
     geom_col() +
     facet_grid(Age ~ Parity)
   
-  # How many missings per year
-  d %>% mutate(miss_edu = factor(if_else(is.na(Education), 1, 0))) %>% 
-    group_by(year, miss_edu) %>% summarise(miss = sum(count)) %>%  
-  ggplot(aes(x = year, miss, color = miss_edu, group = miss_edu)) + 
-    geom_line()
+
     
 ###############        END         ###########################  
