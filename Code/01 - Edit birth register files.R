@@ -136,8 +136,83 @@ d <- rbind(do.call(rbind, result[[1]]),
 
 
   # Save the complete data
-  save(d, file = "Data/births_complete.Rda")
+  save(d, file = "Data/births_missing.Rda")
+
+### Load the data ------------------------------------------
   
+  # Load the data
+  load("Data/births_missing.Rda")
+ 
+    
+  # Plot the missing share
+  d %>% group_by(Year) %>% mutate(Total = sum(Births)) %>%  filter(is.na(Education)) %>% 
+    group_by(Year) %>% summarise(sum(Births), share = sum(Births) / unique(Total)) %>%
+    ggplot(aes(Year, share  )) + 
+    geom_line() + 
+    ylab("Share")
+  # There are a few missing values between 1988 and 1991
+  # There are almost no missing values between 1992 and 2003
+  # There are many missing values between 2004 and 2012
+  # There are some missing values since 2013
+  
+### Multiple imputation ------------------------------------
+              
+  
+  # Expand
+  tmp <- as.data.frame(lapply(d, rep, d$Births))
+  
+  # Deselect Births variable
+  tmp <- subset(tmp, select = c(-Births))
+  
+  # Make all factor
+  tmp <- mutate(tmp, across(c("Age","Parity","Education", "Ethnicity"), as.factor))
+  
+  
+  # Create predictors
+  meth <- c("", "pmm", "pmm", "pmm", "")
+  
+  # Create the matrix
+  pred <- cbind(c(0, 1, 1, 1, 1),
+                c(1, 0, 1, 1, 1),
+                c(1, 1, 0, 1, 1),
+                c(1, 1, 1, 0, 1),
+                c(1, 1, 1, 1, 0))
+  
+  # Create names
+  rownames(pred) <- colnames(pred) <- names(meth) <- c("Age", "Parity", "Education", "Ethnicity", "Year")
+  
+  # Impute education and create 5 datasets
+  imp2 <- mice(tmp, maxit = 5,
+               predictorMatrix = pred,
+               method = meth, print = T)
+  
+  
+  # Create flags for imputed values
+  tmp$Imputed_Parity <- NA
+  tmp$Imputed_Ethinicty <- NA
+  tmp$Imputed_Education <- NA
+  
+  
+  for(j in c("Parity", "Education", "Ethnicity")){
+    
+    # Get the vector of imputed values  
+    imputed <- imp2$imp[[j]]
+    
+    
+    # Select the most frequently imputed value
+    # If you want to add uncertainty of imputation, do here
+    imputed <- rowMode(imputed, ties = "random")
+    
+    
+    # Create a flag
+    tmp[, paste0("Imputed_", j)] <- imp2$where[, j]
+    
+    
+    # Create the value
+    tmp[imp2$where[, j] == 1, j] <- imputed
+    
+    
+  }
 ### Births graphs ------------------------------------------
   
   # Plot the distribution of births over time
@@ -147,37 +222,9 @@ d <- rbind(do.call(rbind, result[[1]]),
     scale_x_continuous(n.breaks = 10) +
     theme(axis.text.x = element_text(angle = 45, vjust = -0.001))
   
-  
-  
-### Multiple imputation of education, ethnicity and parity --------------------
-  
-  load("Data/births_complete.Rda")
-  
-  # Save the data
-  lapply(1989:2021, function(x){  write.csv(d[d$Year == x, ], file = paste0("Raw/Imputation/imp_", x, ".csv"))})
-  
-  # Create the names vector
-  all_samples <- as.data.frame(list.files("Raw/Imputation/"), include.dirs = T)
-  seq_id_all <- seq_along(1:nrow(all_samples))
 
-# --------
-  
-  # Get the number of cores
-  no_cores <- detectCores(logical = T)
-  
-  # Register number of Cluster
-  cl <- makeCluster(33)
-  
-  # Export to clusters
-  clusterExport(cl, list('impute_births', 'all_samples'))
-  
-# -------
-  
-  # Run the imputation
-  births_imputed <- parLapply(cl, seq_id_all, fun = impute_births)
-  
-  # Combine the results
-  births_imputed <- do.call(rbind, births_imputed)
+  # Create imputed data
+  births_imputed <- tmp
   
   # Save the exposure data
   save(births_imputed, file = "Data/births_imputed.Rda")

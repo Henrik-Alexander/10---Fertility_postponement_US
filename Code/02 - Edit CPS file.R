@@ -121,7 +121,7 @@
 ### Clean the age data --------------------------------------------------
   
   # Create age-groups
-  d$age_group <- cut(d$age, breaks = seq(15, 50, by = 5), include.lowest = T, right = F)
+  d$age_group <- coll_age(d$age)
   
 ### Harmonize the race data ---------------------------------------------
   
@@ -141,7 +141,6 @@
   d[is.na(d$hispanic) | is.na(d$race), ] <- NA
   
 ### Remove missings -----------------------------------------------------
-  
   
   # Filter missing data
   d <- d[!is.na(d$cpsid), ]
@@ -198,7 +197,7 @@
   # Conditional distribution of age and parity
   d %>% group_by(age_group, parity) %>% summarise(share = sum(wtfinl)) %>% 
     ggplot(aes(age_group, parity, fill = share)) + 
-    geom_tile() + ylab("Age") +
+    geom_tile() + xlab("Age") +
     theme(legend.key.width = unit(3, "cm")) +
     scale_fill_viridis_c(labels = unit_format(unit = "M", scale = 1e-6)) +
     scale_x_discrete(expand = c(0, 0)) +
@@ -221,7 +220,7 @@
 ### Multiple imputation of education -------------------------------
   
   # Imputations
-  n_imp <- 100
+  n_imp <- 5
   
   # Run multiple imputation
   imp <- mice(d, maxit = 0)
@@ -249,29 +248,29 @@
 ### Impute the data ------------------
   
   # Create a container
-  exp_imp <- list()
+  #exp_imp <- list()
 
   # Estimate with multiple imputations
-  for(i in 1:n_imp){
+  #for(i in 1:n_imp){
     
     # Create a temporary data
-    tmp <- d
+   # tmp <- d
     
     # Insert the imputed values
-    tmp[where, "education"] <- imp_educ[, i]
+    #tmp[where, "education"] <- imp_educ[, i]
     
     # Aggregate the results
-    tmp <- tmp %>% 
-      group_by(age_group, parity, year, hispanic, ethnicity, education) %>% 
-      summarise(Iter = i, Pop = sum(wtfinl), .groups = "drop") %>% 
-      rename(age = age_group)  
+    #tmp <- tmp %>% 
+    #  group_by(age_group, parity, year, hispanic, ethnicity, education) %>% 
+    #  summarise(Iter = i, Pop = sum(wtfinl), .groups = "drop") %>% 
+    #  rename(age = age_group)  
     
     # Create names
-    names(tmp) <- str_to_title(names(tmp))
+    # names(tmp) <- str_to_title(names(tmp))
     
     # Store the results
-    exp_imp[[i]] <- tmp
-  }
+    #exp_imp[[i]] <- tmp
+ # }
   
 ### Aggregate the data -----------------------------------
   

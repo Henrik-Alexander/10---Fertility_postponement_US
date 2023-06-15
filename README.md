@@ -42,35 +42,31 @@ This work would not have been possible with the scientific and programming contr
 3. Run the scripts `01.` to `10.`
 
 
-## Directory structure:
+# Directory Structure
 The structure of the repository is as follows:
 
-*   `\Code`: This folder contains all script files
-*   `\Data`: This folder contains all data that was created in the code  
-*   `\Raw_data`: This folder contains the raw, unmanipulated data
-*   `\Figures`: This folder contains all the created figures
-*   `\Results`: This folder includes tabular outputs
-*   `\Functions`: This folder contains all the functions used in the code 
-*   `\meta_file.R`: This script calls all the scripts. Requires that the user is registered on [US Mortality DataBase](https://usa.mortality.org/mp/auth.pl), [Global Data Lab](https://globaldatalab.org/register/) and has an API-key for [BEA](https://apps.bea.gov/API/signup/)
+```
+.
+├-- .gitignore
+├-- Code
+│   ├── 01_edit_births.R	<- Cleans the birth data
+│   ├── 02_edit_cps.R    <- Cleans the cps data
+│   ├── 03_rates.R    <- Estimates rates
+│   ├── 08_descriptives.R   <- Makes descriptive statistics
+│   ├── old_imputation.R    <- Outdated approach to impute missings
+├-- Raw
+│   ├── cps_000003.csv
+│   ├── cps_19902010.csv
+├-- Figures
+├-- Functions
+│   ├── Packages.R		       <- Installs and loads the packages
+│   ├── Graphics.R           <- Sets the graphic style
+│   ├── Functions.R          <- Installs the functions
+├-- Results
+├-- Readme.md
+└── Meta.R		   <- Runs the entire project
 
-
-### Code:
-*  "00 - Load the data.R" 
-*  "01 - Edit birth register files.R"                       
-*  "02 - Combine birth register files.R"     
-*  "03 - Edit and aggregate pop counts.R"                   
-*  "04 - Births by Parity.R"                 
-*  "05 - Impute and calculate ASFRs.R"                      
-*  "06 - Calculate TFRs etc.R"            
-*  "07 - Development indicators.R"                          
-*  "08 - Analysis.R"                           
-*  "08.01 Regression diagnostics.R"                         
-* "08.02 - Regression with controls.R"         
-* "08.03 - Regression with mean age of childbearing.R"     
-* "09.02 - Smoothing.R"                           
-* "09.03 - longitudinal quantile regression V.R"           
-* "09.04.- Sensitivity analysis; year and state omission.R" "10. Print the results.R" 
-*   "10. - Print the results"
+```
 
 ### Raw_data:
 
@@ -85,20 +81,3 @@ Please download the data for the years 1969 to 2018,
  and save the files in the folder "Raw_data/Births" in the following way:
    "natl1969.csv" - "natl2018.csv" 
 
-2) Download the **population data** from NBER: Select the file single year, 1969-2018, county level data.
-[https://www.nber.org/data/seer_u.s._county_population_data.html],
- and save the file as "Raw_data/Population/uswbosingleages.csv"
- 
-3) Loading the **HDI** data from [**Global Data Lab**](https://globaldatalab.org/). First, in order to download the data the user is required to register at Global Data Lab. Afterwards, choose in the top console under `Instruments` the categery `development indicators`, then select data tables and reduce the countries to the United States by filtering `Countries`. Save the data under `Controls/GDL-Sub-national-HDI-data.csv`.
-
-5) Loading the **life tables** from [**United States Mortality DataBase**](https://usa.mortality.org/). First, register on the website. Second, select on the homepage `lifetables.zip`. This should download the complete data from the website. Under downloads, select the `zip-file` and export it to `Raw_data\controls\`.
-
-4) Loading the data on **economic structure**. In order to execute the analysis on the mechanisms, data on the economic structure has to be downloaded from the [**Bureau of Economic Analysis**](https://www.bea.gov/). Follow the links underneath, click on the buttom `Download` in the top right corner of the webpage and save the data in the folder `~ Controls/` under the respective name. The file names used in the Code are state infront of the blue icon.
-
-   - `Raw_data/Controls/economic_structure.xlsx` -> [**Service jobs 1969-2001**](https://apps.bea.gov/iTable/?reqid=70&step=30&isuri=1&year_end=-1&acrdn=4&classification=naics&state=0&yearbegin=-1&unit_of_measure=levels&major_area=0&area=12000&year=2019&tableid=31&category=431&area_type=0&statistic=1004#eyJhcHBpZCI6NzAsInN0ZXBzIjpbMSwyNCwyOSwyNSwzMSwyNiwyNywzMF0sImRhdGEiOltbInRhYmxlaWQiLCI0Il0sWyJDbGFzc2lmaWNhdGlvbiIsIlNJQyJdLFsiTWFqb3JfQXJlYSIsIjAiXSxbIlN0YXRlIixbIjAiXV0sWyJBcmVhIixbIjAxMDAwIiwiMDIwMDAiLCIwNDAwMCIsIjA1MDAwIiwiMDYwMDAiLCIwODAwMCIsIjA5MDAwIiwiMTAwMDAiLCIxMTAwMCIsIjEyMDAwIiwiMTMwMDAiLCIxNTAwMCIsIjE2MDAwIiwiMTcwMDAiLCIxODAwMCIsIjE5MDAwIiwiMjAwMDAiLCIyMTAwMCIsIjIyMDAwIiwiMjMwMDAiLCIyNDAwMCIsIjI1MDAwIiwiMjYwMDAiLCIyNzAwMCIsIjI4MDAwIiwiMjkwMDAiLCIzMDAwMCIsIjMxMDAwIiwiMzIwMDAiLCIzMzAwMCIsIjM0MDAwIiwiMzUwMDAiLCIzNjAwMCIsIjM3MDAwIiwiMzgwMDAiLCIzOTAwMCIsIjQwMDAwIiwiNDEwMDAiLCI0MjAwMCIsIjQ0MDAwIiwiNDUwMDAiLCI0NjAwMCIsIjQ3MDAwIiwiNDgwMDAiLCI0OTAwMCIsIjUwMDAwIiwiNTEwMDAiLCI1MzAwMCIsIjU0MDAwIiwiNTUwMDAiLCI1NjAwMCJdXSxbIlN0YXRpc3RpYyIsWyI1MDAiLCI2MTAiLCI2MjAiLCI3MDAiLCI4MDAiLCI5MDAiXV0sWyJVbml0X29mX21lYXN1cmUiLCJMZXZlbHMiXSxbIlllYXIiLFsiLTEiXV0sWyJZZWFyQmVnaW4iLCItMSJdLFsiWWVhcl9FbmQiLCItMSJdXX0=)
-   - `Raw_data/Controls/economic_structure2.xlsx` ->  [**Service jobs 2001-2018**](https://apps.bea.gov/iTable/?reqid=70&step=30&isuri=1&year_end=-1&acrdn=4&classification=naics&state=0&yearbegin=-1&unit_of_measure=levels&major_area=0&area=12000&year=2019&tableid=31&category=431&area_type=0&statistic=1004#eyJhcHBpZCI6NzAsInN0ZXBzIjpbMSwyNCwyOSwyNSwzMSwyNiwyNywzMF0sImRhdGEiOltbInRhYmxlaWQiLCIzMCJdLFsiQ2xhc3NpZmljYXRpb24iLCJOQUlDUyJdLFsiTWFqb3JfQXJlYSIsIjAiXSxbIlN0YXRlIixbIjAiXV0sWyJBcmVhIixbIjAxMDAwIiwiMDIwMDAiLCIwNDAwMCIsIjA1MDAwIiwiMDYwMDAiLCIwODAwMCIsIjA5MDAwIiwiMTAwMDAiLCIxMTAwMCIsIjEyMDAwIiwiMTMwMDAiLCIxNTAwMCIsIjE2MDAwIiwiMTcwMDAiLCIxODAwMCIsIjE5MDAwIiwiMjAwMDAiLCIyMTAwMCIsIjIyMDAwIiwiMjMwMDAiLCIyNDAwMCIsIjI1MDAwIiwiMjYwMDAiLCIyNzAwMCIsIjI4MDAwIiwiMjkwMDAiLCIzMDAwMCIsIjMxMDAwIiwiMzIwMDAiLCIzMzAwMCIsIjM0MDAwIiwiMzUwMDAiLCIzNjAwMCIsIjM3MDAwIiwiMzgwMDAiLCIzOTAwMCIsIjQwMDAwIiwiNDEwMDAiLCI0MjAwMCIsIjQ0MDAwIiwiNDUwMDAiLCI0NjAwMCIsIjQ3MDAwIiwiNDgwMDAiLCI0OTAwMCIsIjUwMDAwIiwiNTEwMDAiLCI1MzAwMCIsIjU0MDAwIiwiNTUwMDAiLCI1NjAwMCJdXSxbIlN0YXRpc3RpYyIsWyI4MCIsIjYwMCIsIjcwMCIsIjgwMCIsIjkwMCIsIjEwMDAiLCIxMjAwIiwiMTMwMCIsIjE0MDAiLCIxNTAwIiwiMTYwMCIsIjE3MDAiLCIxODAwIiwiMTkwMCIsIjIwMDAiXV0sWyJVbml0X29mX21lYXN1cmUiLCJMZXZlbHMiXSxbIlllYXIiLFsiMjAxOCIsIjIwMTciLCIyMDE2IiwiMjAxNSIsIjIwMTQiLCIyMDEzIiwiMjAxMiIsIjIwMTEiLCIyMDEwIiwiMjAwOSIsIjIwMDgiLCIyMDA3IiwiMjAwNiIsIjIwMDUiLCIyMDA0IiwiMjAwMyIsIjIwMDIiLCIyMDAxIl1dLFsiWWVhckJlZ2luIiwiLTEiXSxbIlllYXJfRW5kIiwiLTEiXV19)
-    - `Raw_data/Controls/total_jobs.xlsx` -> [**Overall jobs 1969-2001**](https://apps.bea.gov/iTable/?reqid=70&step=30&isuri=1&year_end=-1&acrdn=4&classification=naics&state=0&yearbegin=-1&unit_of_measure=levels&major_area=0&area=12000&year=2019&tableid=31&category=431&area_type=0&statistic=1004#eyJhcHBpZCI6NzAsInN0ZXBzIjpbMSwyNCwyOSwyNSwzMSwyNiwyNywzMF0sImRhdGEiOltbInRhYmxlaWQiLCIzMCJdLFsiQ2xhc3NpZmljYXRpb24iLCJOQUlDUyJdLFsiTWFqb3JfQXJlYSIsIjAiXSxbIlN0YXRlIixbIjAiXV0sWyJBcmVhIixbIjAxMDAwIiwiMDIwMDAiLCIwNDAwMCIsIjA1MDAwIiwiMDYwMDAiLCIwODAwMCIsIjA5MDAwIiwiMTAwMDAiLCIxMTAwMCIsIjEyMDAwIiwiMTMwMDAiLCIxNTAwMCIsIjE2MDAwIiwiMTcwMDAiLCIxODAwMCIsIjE5MDAwIiwiMjAwMDAiLCIyMTAwMCIsIjIyMDAwIiwiMjMwMDAiLCIyNDAwMCIsIjI1MDAwIiwiMjYwMDAiLCIyNzAwMCIsIjI4MDAwIiwiMjkwMDAiLCIzMDAwMCIsIjMxMDAwIiwiMzIwMDAiLCIzMzAwMCIsIjM0MDAwIiwiMzUwMDAiLCIzNjAwMCIsIjM3MDAwIiwiMzgwMDAiLCIzOTAwMCIsIjQwMDAwIiwiNDEwMDAiLCI0MjAwMCIsIjQ0MDAwIiwiNDUwMDAiLCI0NjAwMCIsIjQ3MDAwIiwiNDgwMDAiLCI0OTAwMCIsIjUwMDAwIiwiNTEwMDAiLCI1MzAwMCIsIjU0MDAwIiwiNTUwMDAiLCI1NjAwMCJdXSxbIlN0YXRpc3RpYyIsWyIxMCJdXSxbIlVuaXRfb2ZfbWVhc3VyZSIsIkxldmVscyJdLFsiWWVhciIsWyItMSJdXSxbIlllYXJCZWdpbiIsIi0xIl0sWyJZZWFyX0VuZCIsIi0xIl1dfQ==)
-   - `Raw_data/Controls/total_jobs.xlsx` -> [**Overall jobs 2001-2018**](https://apps.bea.gov/iTable/?reqid=70&step=30&isuri=1&year_end=-1&acrdn=4&classification=naics&state=0&yearbegin=-1&unit_of_measure=levels&major_area=0&area=12000&year=2019&tableid=31&category=431&area_type=0&statistic=1004#eyJhcHBpZCI6NzAsInN0ZXBzIjpbMSwyNCwyOSwyNSwzMSwyNiwyNywzMF0sImRhdGEiOltbInRhYmxlaWQiLCI0Il0sWyJDbGFzc2lmaWNhdGlvbiIsIlNJQyJdLFsiTWFqb3JfQXJlYSIsIjAiXSxbIlN0YXRlIixbIjAiXV0sWyJBcmVhIixbIjAxMDAwIiwiMDIwMDAiLCIwNDAwMCIsIjA1MDAwIiwiMDYwMDAiLCIwODAwMCIsIjA5MDAwIiwiMTAwMDAiLCIxMTAwMCIsIjEyMDAwIiwiMTMwMDAiLCIxNTAwMCIsIjE2MDAwIiwiMTcwMDAiLCIxODAwMCIsIjE5MDAwIiwiMjAwMDAiLCIyMTAwMCIsIjIyMDAwIiwiMjMwMDAiLCIyNDAwMCIsIjI1MDAwIiwiMjYwMDAiLCIyNzAwMCIsIjI4MDAwIiwiMjkwMDAiLCIzMDAwMCIsIjMxMDAwIiwiMzIwMDAiLCIzMzAwMCIsIjM0MDAwIiwiMzUwMDAiLCIzNjAwMCIsIjM3MDAwIiwiMzgwMDAiLCIzOTAwMCIsIjQwMDAwIiwiNDEwMDAiLCI0MjAwMCIsIjQ0MDAwIiwiNDUwMDAiLCI0NjAwMCIsIjQ3MDAwIiwiNDgwMDAiLCI0OTAwMCIsIjUwMDAwIiwiNTEwMDAiLCI1MzAwMCIsIjU0MDAwIiwiNTUwMDAiLCI1NjAwMCJdXSxbIlN0YXRpc3RpYyIsWyIxMCJdXSxbIlVuaXRfb2ZfbWVhc3VyZSIsIkxldmVscyJdLFsiWWVhciIsWyItMSJdXSxbIlllYXJCZWdpbiIsIi0xIl0sWyJZZWFyX0VuZCIsIi0xIl1dfQ==)
-
-### Functions: 
-The subdirectory Functions should contain an R file called `~ /Functions/Functions.R`
