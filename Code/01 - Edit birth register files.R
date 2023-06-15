@@ -17,44 +17,62 @@
   ## Depending on the year the data files look differently
   ## Because of this they are edited in several chunks of code
 
+### Packages & settings -------------------------------------------
+
+# Identifying missing packages
+rm(list = ls())
+
+# Load packages, functions and graphic style
+source("Functions/Packages.R")
+source("Functions/Functions.R")
+source("Functions/Graphics.R")
+
 
 ### Loading the natality files ###############################################
 
-  # Increase the timeout time
-  #options(timeout = max(300, getOption("timeout")))
+if(file.exists("U:/projects/1 Hooray for the J/Code Review/Raw_data/Births/natl1990.csv")){
   
-  #for(i in 1989:2021){
+  # Print that the file exists already
+  cat("The birth files are already loaded!")
+
+}else{
+  
+  # Increase the timeout time
+  options(timeout = max(300, getOption("timeout")))
+  
+  for(i in 1989:2021){
     
     # Temporary file direction
-  #  temp <- tempfile()
+    temp <- tempfile()
     
     # Create the web-page
-  #  webpage <- paste0("https://data.nber.org/natality/", i, "/natl", i, ".csv.zip")
+    webpage <- paste0("https://data.nber.org/natality/", i, "/natl", i, ".csv.zip")
     
     # Download the file
-  #  download.file(webpage, temp, quite = T)
+    download.file(webpage, temp, quite = T)
     
     # Load the data
-  #  unzip(temp, exdir = "Raw/Births")
+    unzip(temp, exdir = "Raw/Births")
     
-  #  cat("Data for ", i, "is saved in /Raw. \n")
+    cat("Data for ", i, "is saved in /Raw. \n")
     
-  #} 
+  } 
 
-### Packages & settings -------------------------------------------
+}
 
-  # Identifying missing packages
-  rm(list = ls())
 
-  # Load packages, functions and graphic style
-  source("Functions/Packages.R")
-  source("Functions/Functions.R")
-  source("Functions/Graphics.R")
 
 ### Loading the data ----------------------------------------------
 
+if(file.exists("Data/births_missing.Rda")){
+  
+  # Load the data
+  load("Data/births_missing.Rda")
+
+}else{
+  
   # Location of the old time series
-  wd <- "U:/male fertility/1 Hooray for the J/Code Review/Raw_data/Births/" 
+  wd <- "U:/projects/1 Hooray for the J/Code Review/Raw_data/Births/" 
     
   # Years to cover
   years <- 1989:2004
@@ -138,15 +156,17 @@ d <- rbind(do.call(rbind, result[[1]]),
   # Save the complete data
   save(d, file = "Data/births_missing.Rda")
 
+}
+
 ### Load the data ------------------------------------------
-  
-  # Load the data
-  load("Data/births_missing.Rda")
- 
     
   # Plot the missing share
-  d %>% group_by(Year) %>% mutate(Total = sum(Births)) %>%  filter(is.na(Education)) %>% 
-    group_by(Year) %>% summarise(sum(Births), share = sum(Births) / unique(Total)) %>%
+  d |> 
+  group_by(Year) |> 
+  mutate(Total = sum(Births)) |>
+  filter(is.na(Education)) |> 
+    group_by(Year) |> 
+  summarise(sum(Births), share = sum(Births) / unique(Total)) |> 
     ggplot(aes(Year, share  )) + 
     geom_line() + 
     ylab("Share")
@@ -156,8 +176,14 @@ d <- rbind(do.call(rbind, result[[1]]),
   # There are some missing values since 2013
   
 ### Multiple imputation ------------------------------------
-              
+            
+if(file.exists("Data/births_imputed.Rda")){
+
+  # Load the imputed births data
+  load("Data/births_imputed.Rda")
   
+}else{
+
   # Expand
   tmp <- as.data.frame(lapply(d, rep, d$Births))
   
@@ -213,34 +239,49 @@ d <- rbind(do.call(rbind, result[[1]]),
     
     
   }
-### Births graphs ------------------------------------------
   
-  # Plot the distribution of births over time
-  ggplot(d, aes(Year, Births, fill = Education)) +
-    geom_col() +
-    facet_grid(Age ~ Ethnicity) +
-    scale_x_continuous(n.breaks = 10) +
-    theme(axis.text.x = element_text(angle = 45, vjust = -0.001))
-  
-
   # Create imputed data
   births_imputed <- tmp
   
-  # Save the exposure data
+  # Save the imputed births data
   save(births_imputed, file = "Data/births_imputed.Rda")
   
+}
+  
+### Births graphs ------------------------------------------
+  
+  # Plot the distribution of births over time
+  plot1 <- ggplot(d, aes(Year, Births, fill = Education)) +
+    geom_col() +
+    facet_grid(Age ~ Ethnicity) +
+    scale_x_continuous(n.breaks = 10) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+  
+  # Save the plot
+  ggsave(plot1, filename = "Figures/births_na.pdf", height = 25, width = 25, units = "cm")
+
+
+#### Aggregate the data ------------------------------------
+
+
   # Aggregate
-  births_imputed <- births_imputed %>% group_by(Age, Parity,  Education, Ethnicity, Year) %>% 
+  births_imputed <- births_imputed |>group_by(Age, Parity,  Education, Ethnicity, Year) |>
     count()
   
   # Save the data
   save(births_imputed, file = "Data/births_complete.Rda")
   
-  # Plot the development of fertility across educational groups
-  ggplot(births_imputed, aes(x = Year, y = n, fill = Education, group = Education)) +
-    geom_col() +
-    facet_grid(Age ~ Parity)
   
-
+### Plot the imputed distribution -------------------------
+  
+  # Plot the development of fertility across educational groups
+  imputed_births <- ggplot(births_imputed, aes(x = Year, y = n, fill = Education, group = Education)) +
+    geom_col() +
+    facet_grid(Age ~ Parity) +
+    guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+  
+  # Save the data
+  ggsave(imputed_births, filename = "Figures/births_imputed.pdf", height = 25, width = 25, units = "cm")
     
 ###############        END         ###########################  
